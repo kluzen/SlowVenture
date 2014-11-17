@@ -2,6 +2,8 @@
 #include <fstream>
 #include <string>
 #include "rapidxml-1.13/rapidxml.hpp"
+#include "Room.h"
+
 using namespace std;
 using namespace rapidxml;
 

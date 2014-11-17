@@ -8,6 +8,18 @@
 #ifndef ITEM_H_
 #define ITEM_H_
 
+#include <vector>
+
+class Trigger; // Not sure if will work.
+
+#include "Trigger.h"
+
+using namespace std;
+
+struct turnon {
+	char* print;
+	char* action;
+};
 
 class Item
 {
@@ -16,28 +28,24 @@ public:
 	virtual ~Item();
 	void setStatus(char*);
 	void setWritting(char*);
-	void setTurnOn(turnon);
-	void addTrigger(Trigger);
+	void setTurnOn(turnon*);
+	void addTrigger(Trigger*);
 
 	char* getName();
 	char* getDescription();
 	char* getStatus();
 	char* getWritting();
-	turnon getTurnOn();
-	Trigger* getTriggers();
+	turnon* getTurnOn();
+	vector<Trigger*> getTriggers();
 private:
 	char* name;
 	char* description;
 	char* status;
 	char* writting;
-	turnon turnOn;
-	Trigger* triggers;
+	turnon* turnOn;
+	vector<Trigger*> triggers;
 };
 
-struct turnon {
-	char* print;
-	char* action;
-};
 
 
 #endif /* ITEM_H_ */

@@ -8,6 +8,12 @@
 #ifndef ATTACK_H_
 #define ATTACK_H_
 
+#include <vector>
+
+#include "Trigger.h"
+
+using namespace std;
+
 class Attack
 {
 public:
@@ -15,15 +21,15 @@ public:
 	virtual ~Attack();
 	void setPrint(char*);
 	void addAction(char*);
-	void addCondition(Condition);
+	void addCondition(condition*);
 
 	char* getPrint();
-	char** getActions();
-	Condition* getConditions();
+	vector<char*> getActions();
+	vector<condition*> getConditions();
 private:
 	char* print;
-	char** actions;
-	Condition* conditions;
+	vector<char*> actions;
+	vector<condition*> conditions;
 };
 
 

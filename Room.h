@@ -8,44 +8,60 @@
 #ifndef ROOM_H_
 #define ROOM_H_
 
+#include <vector>
+
+#include "Item.h"
+#include "Container.h"
+#include "Creature.h"
+#include "Border.h"
+#include "Trigger.h"
+
+using namespace std;
+
+class Room; // Not sure if will work;
+
+struct border {
+	char* direction;
+	Room* room;
+};
+
 class Room
 {
+
 public:
 	Room(char*,char*);
 	virtual ~Room();
 	void setStatus(char*);
 	void setType(char*);
-	void addItem(Item);
-	void addContainer(Container);
-	void addCreature(Creature);
-	void addBorder(border);
-	void addTrigger(Trigger);
+	void addItem(Item*);
+	void addContainer(Container*);
+	void addCreature(Creature*);
+	void addBorder(border*);
+	void addTrigger(Trigger*);
 
 	char* getName();
 	char* getDescription();
 	char* getStatus();
 	char* getType();
-	Item* getItems();
-	Container* getContainers();
-	Creature* getCreatures();
-	border* getBorders();
-	Trigger* getTriggers();
+	vector<Item*> getItems();
+	vector<Container*> getContainers();
+	vector<Creature*> getCreatures();
+//	vector<Border*> getBorders();
+	vector<border*> getBorders();
+	vector<Trigger*> getTriggers();
 private:
 	char* name;
 	char* description;
 	char* status;
 	char* type;
-	Item* items;
-	Container* containers;
-	Creature* creatures;
-	border* borders;
-	Trigger* triggers;
+	vector<Item*> items;
+	vector<Container*> containers;
+	vector<Creature*> creatures;
+//	vector<Border*> borders;
+	vector<border*> borders;
+	vector<Trigger*> triggers;
 };
 
-struct border {
-	char* direction;
-	Room room;
-};
 
 
 #endif /* ROOM_H_ */

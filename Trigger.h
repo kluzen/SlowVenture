@@ -8,6 +8,19 @@
 #ifndef TRIGGER_H_
 #define TRIGGER_H_
 
+#include <vector>
+
+class Item; // Not sure if will work;
+
+#include "Item.h"
+
+struct condition {
+	bool has;
+	char* status;
+	Item* object;
+};
+
+using namespace std;
 
 class Trigger
 {
@@ -20,7 +33,7 @@ public:
 	void setOwner(char*);
 	void setStatus(char*);
 	void setCommand(char*);
-	void addCondition(Condition);
+	void addCondition(condition*);
 
 	char* getType();
 	char* getPrint();
@@ -28,7 +41,7 @@ public:
 	char* getOwner();
 	char* getStatus();
 	char* getCommand();
-	Condition* getConditions();
+	vector<condition*> getConditions();
 private:
 	char* type;
 	char* print;
@@ -36,7 +49,7 @@ private:
 	char* owner;
 	char* status;
 	char* command;
-	Condition* conditions;
+	vector<condition*> conditions;
 };
 
 

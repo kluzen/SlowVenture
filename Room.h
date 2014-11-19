@@ -13,7 +13,6 @@
 #include "Item.h"
 #include "Container.h"
 #include "Creature.h"
-#include "Border.h"
 #include "Trigger.h"
 
 using namespace std;

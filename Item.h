@@ -27,14 +27,14 @@ public:
 	Item(char*,char*);
 	virtual ~Item();
 	void setStatus(char*);
-	void setWritting(char*);
+	void setWriting(char*);
 	void setTurnOn(turnon*);
 	void addTrigger(Trigger*);
 
 	char* getName();
 	char* getDescription();
 	char* getStatus();
-	char* getWritting();
+	char* getWriting();
 	turnon* getTurnOn();
 	vector<Trigger*> getTriggers();
 private:

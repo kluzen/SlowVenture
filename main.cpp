@@ -7,10 +7,129 @@
 using namespace std;
 using namespace rapidxml;
 
-void parseTrigger(Map* gameMap, xml_node<> *node, Trigger* trigger){}
-void parseItem(Map* gameMap, xml_node<> *node, Item* Item){}
-void parseContainer(Map* gameMap, xml_node<> *node, Container* container){}
-void parseCreature(Map* gameMap, xml_node<> *node, Creature* creature){}
+void parseAttack(Map* gameMap, xml_node<> *node, Attack* attack){}
+
+void parseTrigger(Map* gameMap, xml_node<> *node, Trigger* trigger){
+	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
+		string type = child->name();
+
+		if(type == "type"){
+			trigger->setType(child->value());
+		}else if(type == "status"){
+			trigger->setStatus(child->value());
+		}else if(type == "print"){
+			trigger->setPrint(child->value());
+		}else if(type == "action"){
+			trigger->setAction(child->value());
+		}else if(type == "owner"){
+			trigger->setOwner(child->value());
+		}else if(type == "command"){
+			trigger->setCommand(child->value());
+		}else if(type == "condition"){ // This may be an issue
+			vector<Room*> v = gameMap->getItems();
+			char* object = child->first_node("object", 6, false)->value();
+			char* status = child->first_node("status", 6, false)->value();
+			char* owner = child->first_node("owner", 5, false)->value();
+			char* has = child->first_node("has", 3, false)->value();
+
+			for(vector<Room*>::size_type i = 0; i != v.size(); i++){
+				if(name == v[i]->getName()){
+					border *b = new border();
+					b->direction = direction;
+					b->room = v[i];
+					room->addBorder(b);
+					break;
+				}
+			};
+		}
+
+	}
+}
+
+void parseItem(Map* gameMap, xml_node<> *node, Item* item){
+
+	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
+		string type = child->name();
+
+		if(type == "writing"){
+			item->setWriting(child->value());
+		}else if(type == "status"){
+			item->setStatus(child->value());
+		}else if(type == "turnon"){
+			char* print = child->first_node("print", 5, false)->value();
+			char* action = child->first_node("action", 6, false)->value();
+			turnon *t = new turnon();
+			t->print = print;
+			t->action = action;
+			item->setTurnOn(t);
+		}else if(type == "trigger"){
+			Trigger *t = new Trigger();
+			parseTrigger(gameMap, child, t);
+			item->addTrigger(t);
+		}
+
+	}
+}
+
+void parseContainer(Map* gameMap, xml_node<> *node, Container* container){
+
+	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
+		string type = child->name();
+
+		if(type == "status"){
+			container->setStatus(child->value());
+		}else if(type == "accept"){
+			vector<Item*> v = gameMap->getItems();
+			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
+				if(child->value() == v[i]->getName()){
+					container->addAccept(v[i]);
+					break;
+				}
+			}
+		}else if(type == "item"){
+			vector<Item*> v = gameMap->getItems();
+			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
+				if(child->value() == v[i]->getName()){
+					container->addItem(v[i]);
+					break;
+				}
+			}
+		}else if(type == "trigger"){
+			Trigger *t = new Trigger();
+			parseTrigger(gameMap, child, t);
+			container->addTrigger(t);
+		}
+
+	}
+}
+
+void parseCreature(Map* gameMap, xml_node<> *node, Creature* creature){
+
+	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
+		string type = child->name();
+
+		if(type == "status"){
+			creature->setStatus(child->value());
+		}else if(type == "vulnerability"){
+			vector<Item*> v = gameMap->getItems();
+			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
+				if(child->value() == v[i]->getName()){
+					creature->addVulnerability(v[i]);
+					break;
+				}
+			}
+		}else if(type == "attack"){
+			Attack *a = new Attack();
+			parseAttack(gameMap, child, a);
+			creature->setAttack(a);
+		}else if(type == "trigger"){
+			Trigger *t = new Trigger();
+			parseTrigger(gameMap, child, t);
+			creature->addTrigger(t);
+		}
+
+	}
+}
 
 void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 
@@ -61,6 +180,7 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 		}else if(type == "trigger"){
 			Trigger *t = new Trigger();
 			parseTrigger(gameMap, child, t);
+			room->addTrigger(t);
 		}
 
 	}

@@ -22,7 +22,7 @@ Item::~Item(){}
 void Item::setStatus(char* c){
 	status = c;
 }
-void Item::setWritting(char* c){
+void Item::setWriting(char* c){
 	writting = c;
 }
 void Item::setTurnOn(turnon* t){
@@ -41,7 +41,7 @@ char* Item::getDescription(){
 char* Item::getStatus(){
 	return status;
 }
-char* Item::getWritting(){
+char* Item::getWriting(){
 	return writting;
 }
 turnon* Item::getTurnOn(){

@@ -45,7 +45,6 @@ public:
 	vector<Item*> getItems();
 	vector<Container*> getContainers();
 	vector<Creature*> getCreatures();
-//	vector<Border*> getBorders();
 	vector<border*> getBorders();
 	vector<Trigger*> getTriggers();
 private:
@@ -56,7 +55,6 @@ private:
 	vector<Item*> items;
 	vector<Container*> containers;
 	vector<Creature*> creatures;
-//	vector<Border*> borders;
 	vector<border*> borders;
 	vector<Trigger*> triggers;
 };

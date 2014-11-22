@@ -7,7 +7,55 @@
 using namespace std;
 using namespace rapidxml;
 
-void parseAttack(Map* gameMap, xml_node<> *node, Attack* attack){}
+void parseAttack(Map* gameMap, xml_node<> *node, Attack* attack){
+	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
+		string type = child->name();
+
+		if(type == "print"){
+			attack->setPrint(child->value());
+		}else if(type == "action"){
+			attack->addAction(child->value());
+		}else if(type == "condition"){ // This may be an issue
+			vector<Item*> v = gameMap->getItems();
+			xml_node<> *testNode;
+			char* object;
+			char* status;
+			char* owner;
+			char* has;
+
+			testNode = child->first_node("object", 6, false);
+			if(testNode != 0)
+				object = testNode->value();
+			testNode = child->first_node("status", 6, false);
+			if(testNode != 0)
+				status = testNode->value();
+			testNode = child->first_node("owner", 5, false);
+			if(testNode != 0)
+				owner = testNode->value();
+			testNode = child->first_node("has", 3, false);
+			if(testNode != 0)
+				has = testNode->value();
+
+			condition *c = new condition();
+			c->status = status;
+			c->owner = owner;
+			if((string)has == "yes")
+				c->has = true;
+			else
+				c->has = false;
+
+			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
+				if(object == v[i]->getName()){
+					c->object = v[i];
+					break;
+				}
+			}
+			attack->addCondition(c);
+		}
+
+	}
+
+}
 
 void parseTrigger(Map* gameMap, xml_node<> *node, Trigger* trigger){
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
@@ -26,21 +74,41 @@ void parseTrigger(Map* gameMap, xml_node<> *node, Trigger* trigger){
 		}else if(type == "command"){
 			trigger->setCommand(child->value());
 		}else if(type == "condition"){ // This may be an issue
-			vector<Room*> v = gameMap->getItems();
-			char* object = child->first_node("object", 6, false)->value();
-			char* status = child->first_node("status", 6, false)->value();
-			char* owner = child->first_node("owner", 5, false)->value();
-			char* has = child->first_node("has", 3, false)->value();
+			vector<Item*> v = gameMap->getItems();
+			xml_node<> *testNode;
+			char* object;
+			char* status;
+			char* owner;
+			char* has;
 
-			for(vector<Room*>::size_type i = 0; i != v.size(); i++){
-				if(name == v[i]->getName()){
-					border *b = new border();
-					b->direction = direction;
-					b->room = v[i];
-					room->addBorder(b);
+			testNode = child->first_node("object", 6, false);
+			if(testNode != 0)
+				object = testNode->value();
+			testNode = child->first_node("status", 6, false);
+			if(testNode != 0)
+				status = testNode->value();
+			testNode = child->first_node("owner", 5, false);
+			if(testNode != 0)
+				owner = testNode->value();
+			testNode = child->first_node("has", 3, false);
+			if(testNode != 0)
+				has = testNode->value();
+
+			condition *c = new condition();
+			c->status = status;
+			c->owner = owner;
+			if((string)has == "yes")
+				c->has = true;
+			else
+				c->has = false;
+
+			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
+				if(object == v[i]->getName()){
+					c->object = v[i];
 					break;
 				}
-			};
+			}
+			trigger->addCondition(c);
 		}
 
 	}
@@ -135,7 +203,7 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
-
+		cout << type << endl;
 		if(type == "type"){
 			room->setType(child->value());
 		}else if(type == "status"){
@@ -204,16 +272,16 @@ void parseMapNode(Map* gameMap, xml_node<> *node){
 
 	if(nodeName == "room"){
 		gameMap->addRoom(new Room(name, desc));
-		cout << "New room: " << name << ", " << desc << endl;
+//		cout << "New room: " << name << ", " << desc << endl;
 	}else if(nodeName == "item"){
 		gameMap->addItem(new Item(name, desc));
-		cout << "New item: " << name << ", " << desc << endl;
+//		cout << "New item: " << name << ", " << desc << endl;
 	}else if(nodeName == "container"){
 		gameMap->addContainer(new Container(name, desc));
-		cout << "New container: " << name << ", " << desc << endl;
+//		cout << "New container: " << name << ", " << desc << endl;
 	}else if(nodeName == "creature"){
 		gameMap->addCreature(new Creature(name, desc));
-		cout << "New creature: " << name << ", " << desc << endl;
+//		cout << "New creature: " << name << ", " << desc << endl;
 	}else{
 		cout << node->name() << " does not match anything" << endl;
 	}
@@ -226,6 +294,7 @@ void parseNode(Map* gameMap, xml_node<> *node){
 
 	if(nodeName == "room"){
 		vector<Room*> v = gameMap->getRooms();
+		cout << v.size();
 		for(vector<Room*>::size_type i = 0; i != v.size(); i++){
 			if(name == v[i]->getName()){
 				parseRoom(gameMap, node, v[i]);
@@ -286,10 +355,59 @@ int main () {
 		parseNode(gameMap, child);
 	}
 
+	// User's inventory starting empty
+	vector<Item*> inventory;
+
+	// List of rooms on map
 	vector<Room*> rooms = gameMap->getRooms();
 
-	for(vector<Room*>::size_type i = 0; i != rooms.size(); i++){
-		cout << rooms[i]->getName() << endl;
+	Room* curRoom = rooms[0];
+	bool gameRunning = true;
+	bool nextRoom = false;
+	string input;
+
+	while(gameRunning){
+		cout << curRoom->getDescription() << endl;
+		nextRoom = false;
+
+		while(!nextRoom){
+			cin >> input;
+
+			// Check triggers
+			bool triggerMet = false;
+			vector<Trigger*> triggers = curRoom->getTriggers();
+			cout << triggers.size() << endl;
+			for(vector<Trigger*>::size_type i = 0; i != triggers.size(); i++){
+				Trigger* t = triggers[i];
+				cout << t->getCommand() << endl;
+				if(input == t->getCommand()){
+					cout << "match" << endl;
+//					bool conditionMet = false;
+//					// Trigger met, check conditions
+//					vector<condition*> conditions = t->getConditions();
+//					for(vector<condition*>::size_type j = 0; j != conditions.size(); j++){
+//						condition* c = conditions[j];
+//						conditionMet = true;
+//						break;
+//					}
+//					if(conditionMet){
+//						cout << t->getPrint() << endl;
+//						triggerMet = true;
+//						break;
+//					}
+				}
+			}
+			if(triggerMet){
+				continue; // Trigger is met, ask user for another input;
+			}
+
+			if(input == "n" || input == "e" || input == "s" || input == "w"){
+				// User attempting to move
+				vector<border*> borders = curRoom->getBorders();
+				cout << "moving" << endl;
+			}
+		}
+
 	}
 
 

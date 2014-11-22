@@ -17,6 +17,7 @@ class Item; // Not sure if will work;
 struct condition {
 	bool has;
 	char* status;
+	char* owner;
 	Item* object;
 };
 

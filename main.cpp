@@ -203,7 +203,6 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
-		cout << type << endl;
 		if(type == "type"){
 			room->setType(child->value());
 		}else if(type == "status"){
@@ -289,12 +288,11 @@ void parseMapNode(Map* gameMap, xml_node<> *node){
 
 // Fully parses the nodes and links them together
 void parseNode(Map* gameMap, xml_node<> *node){
-	char* name = node->first_node("name", 4, false)->name();
+	char* name = node->first_node("name", 4, false)->value();
 	string nodeName = node->name();
 
 	if(nodeName == "room"){
 		vector<Room*> v = gameMap->getRooms();
-		cout << v.size();
 		for(vector<Room*>::size_type i = 0; i != v.size(); i++){
 			if(name == v[i]->getName()){
 				parseRoom(gameMap, node, v[i]);
@@ -327,6 +325,27 @@ void parseNode(Map* gameMap, xml_node<> *node){
 		}
 	}
 }
+
+// Splits a string into a vector of words in the string
+vector<string> split(string s){
+	vector<string> v;
+	int size = s.size();
+	int beg = 0;
+	int end = 0;
+
+	while(beg < size){
+		while(end < size && s.at(end) != ' '){
+			end++;
+		}
+		if(beg != end){
+			v.push_back(s.substr(beg, end - beg));
+		}
+		beg = end + 1;
+		end++;
+	}
+	return v;
+}
+
 
 int main () {
 	string line;
@@ -371,30 +390,37 @@ int main () {
 		nextRoom = false;
 
 		while(!nextRoom){
-			cin >> input;
+//			cin >> input;
+			getline(cin, input);
 
 			// Check triggers
 			bool triggerMet = false;
 			vector<Trigger*> triggers = curRoom->getTriggers();
-			cout << triggers.size() << endl;
 			for(vector<Trigger*>::size_type i = 0; i != triggers.size(); i++){
 				Trigger* t = triggers[i];
-				cout << t->getCommand() << endl;
 				if(input == t->getCommand()){
-					cout << "match" << endl;
-//					bool conditionMet = false;
-//					// Trigger met, check conditions
-//					vector<condition*> conditions = t->getConditions();
-//					for(vector<condition*>::size_type j = 0; j != conditions.size(); j++){
-//						condition* c = conditions[j];
-//						conditionMet = true;
-//						break;
-//					}
-//					if(conditionMet){
-//						cout << t->getPrint() << endl;
-//						triggerMet = true;
-//						break;
-//					}
+					bool conditionMet = false;
+					// Trigger is set off, check conditions
+					vector<condition*> conditions = t->getConditions();
+					for(vector<condition*>::size_type j = 0; j != conditions.size(); j++){
+						condition* c = conditions[j];
+
+						// Conditions can mean so many things... Case by case for now
+						if((string)c->owner == "inventory"){
+							conditionMet = !c->has;
+							for(vector<Item*>::size_type j = 0; j != inventory.size(); j++){
+								if(inventory[j]->getName() == c->object->getName()){
+									conditionMet = !conditionMet;
+								}
+							}
+						}
+						break;
+					}
+					if(conditionMet){
+						cout << t->getPrint() << endl;
+						triggerMet = true;
+						break;
+					}
 				}
 			}
 			if(triggerMet){
@@ -404,7 +430,69 @@ int main () {
 			if(input == "n" || input == "e" || input == "s" || input == "w"){
 				// User attempting to move
 				vector<border*> borders = curRoom->getBorders();
-				cout << "moving" << endl;
+				bool moving = false;
+				for(vector<border*>::size_type i = 0; i != borders.size(); i++){
+					border* b = borders[i];
+					// Moving user to next room
+					if((string)b->direction == input){
+						nextRoom = true;
+						moving = true;
+						curRoom = b->room;
+						break;
+					}
+				}
+				if(!moving){
+					cout << "Can't go that way." << endl;
+				}
+			}else if(input == "i"){
+				// List inventory items
+				cout << "Inventory: ";
+				if(inventory.size() == 0){
+					cout << "empty" << endl;
+				}else{
+					bool first = true;
+					for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+						if(first){
+							first = false;
+							cout << inventory[i]->getName();
+						}else{
+							cout << ", " << inventory[i]->getName();
+						}
+					}
+					cout << endl;
+				}
+			}else if(input == "Game Over"){
+				cout << "Victory!" << endl;
+				return 0;
+			}else{
+				vector<string> v = split(input);
+				if(v.size() > 1){
+					string command = v[0];
+					string second = v[1];
+
+					if(command == "take"){
+						// Try to take something
+					}else if(command == "open"){
+						// Try to open something
+					}else if(command == "read"){
+						// Try to read something
+					}else if(command == "drop"){
+						// Try to drop seomthing
+					}else if(command == "put" && v.size() >= 4){
+						// Analyze put command
+					}else if(command == "turn" && second == "on" && v.size() >= 3){
+						// Try to turn something on
+					}else if(command == "attack" && v.size() >= 4){
+						// Analyze attack command
+					}else{
+						cout << "Error" << endl;
+					}
+				}else{
+					cout << "Error" << endl;
+				}
+//				for(vector<string>::size_type i = 0; i != v.size(); i++){
+//					cout << "\"" << v[i] << "\"" << endl;
+//				}
 			}
 		}
 

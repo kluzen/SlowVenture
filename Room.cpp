@@ -26,6 +26,14 @@ void Room::setStatus(char* c){
 void Room::addItem(Item* i){
 	items.push_back(i);
 }
+void Room::removeItem(Item* item){
+	for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+		if(item == items[i]){
+			items.erase(items.begin() + i);
+			return;
+		}
+	}
+}
 void Room::addContainer(Container* c){
 	containers.push_back(c);
 }

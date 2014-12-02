@@ -12,6 +12,8 @@ using namespace std;
 
 Container::Container(char* n, char* d): name(n), description(d){
 	status = NULL;
+	item = NULL;
+	accept = NULL;
 }
 
 Container::~Container(){}
@@ -19,11 +21,11 @@ Container::~Container(){}
 void Container::setStatus(char* c){
 	status = c;
 }
-void Container::addAccept(Item* i){
-	accept.push_back(i);
+void Container::setAccept(Item* i){
+	accept = i;
 }
-void Container::addItem(Item* i){
-	items.push_back(i);
+void Container::setItem(Item* i){
+	item = i;
 }
 void Container::addTrigger(Trigger* t){
 	triggers.push_back(t);
@@ -38,11 +40,11 @@ char* Container::getDescription(){
 char* Container::getStatus(){
 	return status;
 }
-vector<Item*> Container::getAccept(){
+Item* Container::getAccept(){
 	return accept;
 }
-vector<Item*> Container::getItems(){
-	return items;
+Item* Container::getItem(){
+	return item;
 }
 vector<Trigger*> Container::getTriggers(){
 	return triggers;

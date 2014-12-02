@@ -33,6 +33,7 @@ public:
 	void setStatus(char*);
 	void setType(char*);
 	void addItem(Item*);
+	void removeItem(Item*);
 	void addContainer(Container*);
 	void addCreature(Creature*);
 	void addBorder(border*);

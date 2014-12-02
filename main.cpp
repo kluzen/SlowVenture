@@ -149,16 +149,16 @@ void parseContainer(Map* gameMap, xml_node<> *node, Container* container){
 		}else if(type == "accept"){
 			vector<Item*> v = gameMap->getItems();
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
-				if(child->value() == v[i]->getName()){
-					container->addAccept(v[i]);
+				if((string)child->value() == v[i]->getName()){
+					container->setAccept(v[i]);
 					break;
 				}
 			}
 		}else if(type == "item"){
 			vector<Item*> v = gameMap->getItems();
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
-				if(child->value() == v[i]->getName()){
-					container->addItem(v[i]);
+				if((string)child->value() == v[i]->getName()){
+					container->setItem(v[i]);
 					break;
 				}
 			}
@@ -181,7 +181,7 @@ void parseCreature(Map* gameMap, xml_node<> *node, Creature* creature){
 		}else if(type == "vulnerability"){
 			vector<Item*> v = gameMap->getItems();
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
-				if(child->value() == v[i]->getName()){
+				if((string)child->value() == v[i]->getName()){
 					creature->addVulnerability(v[i]);
 					break;
 				}
@@ -210,7 +210,9 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 		}else if(type == "item"){
 			vector<Item*> v = gameMap->getItems();
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
-				if(child->value() == v[i]->getName()){
+//				cout << child->value() << ":" << v[i]->getName() << endl;
+				if((string)child->value() == v[i]->getName()){
+//					cout << "Added item " << v[i]->getName() << " to " << room->getName() << endl;
 					room->addItem(v[i]);
 					break;
 				}
@@ -218,7 +220,7 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 		}else if(type == "container"){
 			vector<Container*> v = gameMap->getContainers();
 			for(vector<Container*>::size_type i = 0; i != v.size(); i++){
-				if(child->value() == v[i]->getName()){
+				if((string)child->value() == v[i]->getName()){
 					room->addContainer(v[i]);
 					break;
 				}
@@ -226,7 +228,7 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 		}else if(type == "creature"){
 			vector<Creature*> v = gameMap->getCreatures();
 			for(vector<Creature*>::size_type i = 0; i != v.size(); i++){
-				if(child->value() == v[i]->getName()){
+				if((string)child->value() == v[i]->getName()){
 					room->addCreature(v[i]);
 					break;
 				}
@@ -465,19 +467,71 @@ int main () {
 				cout << "Victory!" << endl;
 				return 0;
 			}else{
-				vector<string> v = split(input);
+				vector<string> v = split(input); // Splits input on spaces
 				if(v.size() > 1){
 					string command = v[0];
 					string second = v[1];
 
 					if(command == "take"){
 						// Try to take something
+						// Move item from room to inventory
+						vector<Item*> items = curRoom->getItems();
+						cout << items.size() << endl;
+						bool found = false;
+						for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+//							cout << second << " : " << items[i]->getName() << endl;
+							if(second == items[i]->getName()){
+								inventory.push_back(items[i]);
+//								items.erase(items.begin() + i);
+								curRoom->removeItem(items[i]);
+								cout << "Item " << second << " added to inventory." << endl;
+								found = true;
+								break;
+							}
+						}
+						if(!found){
+							cout << "Error" << endl;
+						}
 					}else if(command == "open"){
 						// Try to open something
+						// Move items from container to room
+						vector<Container*> containers = curRoom->getContainers();
+						bool found = false;
+						for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+							if(second == containers[i]->getName()){
+								Item* item = containers[i]->getItem();
+								if(item == NULL){
+									cout << second << " is empty." << endl;
+								}else{
+									curRoom->addItem(item);
+									containers[i]->setItem(NULL);
+								}
+								found = true;
+								break;
+							}
+						}
+						if(!found){
+							cout << "Error" << endl;
+						}
 					}else if(command == "read"){
 						// Try to read something
 					}else if(command == "drop"){
 						// Try to drop seomthing
+						// Move item from inventory to room
+						bool found = false;
+						for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+							if(second == inventory[i]->getName()){
+								vector<Item*> items = curRoom->getItems();
+								curRoom->addItem(inventory[i]);
+								inventory.erase(inventory.begin() + i);
+								cout << second << " dropped." << endl;
+								found = true;
+								break;
+							}
+						}
+						if(!found){
+							cout << "Error" << endl;
+						}
 					}else if(command == "put" && v.size() >= 4){
 						// Analyze put command
 					}else if(command == "turn" && second == "on" && v.size() >= 3){

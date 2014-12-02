@@ -21,22 +21,22 @@ public:
 	Container(char*,char*);
 	virtual ~Container();
 	void setStatus(char*);
-	void addAccept(Item*);
-	void addItem(Item*);
+	void setAccept(Item*);
+	void setItem(Item*);
 	void addTrigger(Trigger*);
 
 	char* getName();
 	char* getDescription();
 	char* getStatus();
-	vector<Item*> getAccept();
-	vector<Item*> getItems();
+	Item* getAccept();
+	Item* getItem();
 	vector<Trigger*> getTriggers();
 private:
 	char* name;
 	char* description;
 	char* status;
-	vector<Item*> accept;
-	vector<Item*> items;
+	Item* accept;
+	Item* item;
 	vector<Trigger*> triggers;
 };
 

@@ -366,6 +366,21 @@ vector<string> split(string s){
 	return v;
 }
 
+void analyzeSudoInput(Room* &curRoom, vector<Item*> &inventory, string input){
+	vector<string> v = split(input); // Splits input on spaces
+	string command = v[0];
+	string second = v[1];
+
+	if(command == "Update"){
+		// Updates status of some item
+		for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+			if(inventory[i]->getName() == second){
+				inventory[i]->setStatus(v[3]);
+			}
+		}
+	}
+}
+
 bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 //	vector<Item*> inventory = *inventoryP;
 	bool nextRoom = false;
@@ -512,6 +527,17 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				}
 			}else if(command == "read"){
 				// Try to read something
+				bool found = false;
+				for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+					if(second == inventory[i]->getName()){
+						cout << inventory[i]->getWriting() << endl;
+						found = true;
+						break;
+					}
+				}
+				if(!found){
+					cout << "Error" << endl;
+				}
 			}else if(command == "drop"){
 				// Try to drop seomthing
 				// Move item from inventory to room
@@ -533,6 +559,19 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				// Analyze put command
 			}else if(command == "turn" && second == "on" && v.size() >= 3){
 				// Try to turn something on
+				bool found = false;
+				for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+					if(v[2] == inventory[i]->getName()){
+						cout << "You activate the " << v[2] << "." << endl;
+						cout << inventory[i]->getTurnOn()->print << endl;
+						analyzeSudoInput(curRoom, inventory, inventory[i]->getTurnOn()->action);
+						found = true;
+						break;
+					}
+				}
+				if(!found){
+					cout << "Error" << endl;
+				}
 			}else if(command == "attack" && v.size() >= 4){
 				// Analyze attack command
 			}else{
@@ -589,7 +628,6 @@ int main () {
 		nextRoom = false;
 
 		while(!nextRoom){
-//			cin >> input;
 			getline(cin, input);
 
 			nextRoom = analyzeInput(curRoom, inventory, input);
@@ -597,8 +635,6 @@ int main () {
 
 	}
 
-
-//	cout << doc.first_node()->first_node()->name() << endl;
 	return 0;
 }
 

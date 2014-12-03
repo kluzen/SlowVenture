@@ -10,55 +10,48 @@
 
 using namespace std;
 
-Trigger::Trigger(){
-	type = NULL;
-	print = NULL;
-	action = NULL;
-	owner = NULL;
-	status = NULL;
-	command = NULL;
-}
+Trigger::Trigger(){}
 
 Trigger::~Trigger(){}
 
-void Trigger::setType(char* c){
+void Trigger::setType(string c){
 	type = c;
 }
-void Trigger::setPrint(char* c){
+void Trigger::setPrint(string c){
 	print = c;
 }
-void Trigger::setAction(char* c){
+void Trigger::setAction(string c){
 	action = c;
 }
-void Trigger::setOwner(char* c){
+void Trigger::setOwner(string c){
 	owner = c;
 }
-void Trigger::setStatus(char* c){
+void Trigger::setStatus(string c){
 	status = c;
 }
-void Trigger::setCommand(char* c){
+void Trigger::setCommand(string c){
 	command = c;
 }
 void Trigger::addCondition(condition* c){
 	conditions.push_back(c);
 }
 
-char* Trigger::getType(){
+string Trigger::getType(){
 	return type;
 }
-char* Trigger::getPrint(){
+string Trigger::getPrint(){
 	return print;
 }
-char* Trigger::getAction(){
+string Trigger::getAction(){
 	return action;
 }
-char* Trigger::getOwner(){
+string Trigger::getOwner(){
 	return owner;
 }
-char* Trigger::getStatus(){
+string Trigger::getStatus(){
 	return status;
 }
-char* Trigger::getCommand(){
+string Trigger::getCommand(){
 	return command;
 }
 vector<condition*> Trigger::getConditions(){

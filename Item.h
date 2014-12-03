@@ -9,6 +9,7 @@
 #define ITEM_H_
 
 #include <vector>
+#include <string>
 
 class Trigger; // Not sure if will work.
 
@@ -17,31 +18,31 @@ class Trigger; // Not sure if will work.
 using namespace std;
 
 struct turnon {
-	char* print;
-	char* action;
+	string print;
+	string action;
 };
 
 class Item
 {
 public:
-	Item(char*,char*);
+	Item(string,string);
 	virtual ~Item();
-	void setStatus(char*);
-	void setWriting(char*);
+	void setStatus(string);
+	void setWriting(string);
 	void setTurnOn(turnon*);
 	void addTrigger(Trigger*);
 
-	char* getName();
-	char* getDescription();
-	char* getStatus();
-	char* getWriting();
+	string getName();
+	string getDescription();
+	string getStatus();
+	string getWriting();
 	turnon* getTurnOn();
 	vector<Trigger*> getTriggers();
 private:
-	char* name;
-	char* description;
-	char* status;
-	char* writting;
+	string name;
+	string description;
+	string status;
+	string writting;
 	turnon* turnOn;
 	vector<Trigger*> triggers;
 };

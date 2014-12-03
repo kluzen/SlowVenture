@@ -9,6 +9,7 @@
 #define CONTAINER_H_
 
 #include <vector>
+#include <string>
 
 #include "Trigger.h"
 #include "Item.h"
@@ -18,23 +19,23 @@ using namespace std;
 class Container
 {
 public:
-	Container(char*,char*);
+	Container(string,string);
 	virtual ~Container();
-	void setStatus(char*);
+	void setStatus(string);
 	void setAccept(Item*);
 	void setItem(Item*);
 	void addTrigger(Trigger*);
 
-	char* getName();
-	char* getDescription();
-	char* getStatus();
+	string getName();
+	string getDescription();
+	string getStatus();
 	Item* getAccept();
 	Item* getItem();
 	vector<Trigger*> getTriggers();
 private:
-	char* name;
-	char* description;
-	char* status;
+	string name;
+	string description;
+	string status;
 	Item* accept;
 	Item* item;
 	vector<Trigger*> triggers;

@@ -10,17 +10,14 @@
 
 using namespace std;
 
-Room::Room(char* n, char* d): name(n), description(d){
-	status = NULL;
-	type = NULL;
-}
+Room::Room(string n, string d): name(n), description(d){}
 
 Room::~Room(){}
 
-void Room::setType(char* c){
+void Room::setType(string c){
 	type = c;
 }
-void Room::setStatus(char* c){
+void Room::setStatus(string c){
 	status = c;
 }
 void Room::addItem(Item* i){
@@ -47,16 +44,16 @@ void Room::addTrigger(Trigger* t){
 	triggers.push_back(t);
 }
 
-char* Room::getName(){
+string Room::getName(){
 	return name;
 }
-char* Room::getDescription(){
+string Room::getDescription(){
 	return description;
 }
-char* Room::getStatus(){
+string Room::getStatus(){
 	return status;
 }
-char* Room::getType(){
+string Room::getType(){
 	return type;
 }
 vector<Item*> Room::getItems(){

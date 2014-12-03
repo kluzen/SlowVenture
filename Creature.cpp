@@ -11,14 +11,13 @@
 
 using namespace std;
 
-Creature::Creature(char* n, char* d): name(n), description(d){
-	status = NULL;
+Creature::Creature(string n, string d): name(n), description(d){
 	attack = NULL;
 }
 
 Creature::~Creature(){}
 
-void Creature::setStatus(char* c){
+void Creature::setStatus(string c){
 	status = c;
 }
 void Creature::addVulnerability(Item* i){
@@ -31,13 +30,13 @@ void Creature::addTrigger(Trigger* t){
 	triggers.push_back(t);
 }
 
-char* Creature::getName(){
+string Creature::getName(){
 	return name;
 }
-char* Creature::getDescription(){
+string Creature::getDescription(){
 	return description;
 }
-char* Creature::getStatus(){
+string Creature::getStatus(){
 	return status;
 }
 vector<Item*> Creature::getVulnerabilities(){

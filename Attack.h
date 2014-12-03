@@ -9,6 +9,7 @@
 #define ATTACK_H_
 
 #include <vector>
+#include <string>
 
 #include "Trigger.h"
 
@@ -19,16 +20,16 @@ class Attack
 public:
 	Attack();
 	virtual ~Attack();
-	void setPrint(char*);
-	void addAction(char*);
+	void setPrint(string);
+	void addAction(string);
 	void addCondition(condition*);
 
-	char* getPrint();
-	vector<char*> getActions();
+	string getPrint();
+	vector<string> getActions();
 	vector<condition*> getConditions();
 private:
-	char* print;
-	vector<char*> actions;
+	string print;
+	vector<string> actions;
 	vector<condition*> conditions;
 };
 

@@ -9,16 +9,20 @@
 #define TRIGGER_H_
 
 #include <vector>
+#include <string>
 
 class Item; // Not sure if will work;
+class Container;
 
 #include "Item.h"
+#include "Container.h"
 
 struct condition {
 	bool has;
-	char* status;
-	char* owner;
-	Item* object;
+	string status;
+	string owner;
+	Item* objectI;
+	Container* objectC;
 };
 
 using namespace std;
@@ -28,28 +32,28 @@ class Trigger
 public:
 	Trigger();
 	virtual ~Trigger();
-	void setType(char*);
-	void setPrint(char*);
-	void setAction(char*);
-	void setOwner(char*);
-	void setStatus(char*);
-	void setCommand(char*);
+	void setType(string);
+	void setPrint(string);
+	void setAction(string);
+	void setOwner(string);
+	void setStatus(string);
+	void setCommand(string);
 	void addCondition(condition*);
 
-	char* getType();
-	char* getPrint();
-	char* getAction();
-	char* getOwner();
-	char* getStatus();
-	char* getCommand();
+	string getType();
+	string getPrint();
+	string getAction();
+	string getOwner();
+	string getStatus();
+	string getCommand();
 	vector<condition*> getConditions();
 private:
-	char* type;
-	char* print;
-	char* action;
-	char* owner;
-	char* status;
-	char* command;
+	string type;
+	string print;
+	string action;
+	string owner;
+	string status;
+	string command;
 	vector<condition*> conditions;
 };
 

@@ -9,6 +9,7 @@
 #define CREATURE_H_
 
 #include <vector>
+#include <string>
 
 #include "Item.h"
 #include "Attack.h"
@@ -19,23 +20,23 @@ using namespace std;
 class Creature
 {
 public:
-	Creature(char*,char*);
+	Creature(string,string);
 	virtual ~Creature();
-	void setStatus(char*);
+	void setStatus(string);
 	void addVulnerability(Item*);
 	void setAttack(Attack*);
 	void addTrigger(Trigger*);
 
-	char* getName();
-	char* getDescription();
-	char* getStatus();
+	string getName();
+	string getDescription();
+	string getStatus();
 	vector<Item*> getVulnerabilities();
 	Attack* getAttack();
 	vector<Trigger*> getTriggers();
 private:
-	char* name;
-	char* description;
-	char* status;
+	string name;
+	string description;
+	string status;
 	vector<Item*> vulnerabilities;
 	Attack* attack;
 	vector<Trigger*> triggers;

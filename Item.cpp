@@ -11,18 +11,16 @@
 
 using namespace std;
 
-Item::Item(char* n, char* d): name(n), description(d){
-	status = NULL;
-	writting = NULL;
+Item::Item(string n, string d): name(n), description(d){
 	turnOn = NULL;
 }
 
 Item::~Item(){}
 
-void Item::setStatus(char* c){
+void Item::setStatus(string c){
 	status = c;
 }
-void Item::setWriting(char* c){
+void Item::setWriting(string c){
 	writting = c;
 }
 void Item::setTurnOn(turnon* t){
@@ -32,16 +30,16 @@ void Item::addTrigger(Trigger* t){
 	triggers.push_back(t);
 }
 
-char* Item::getName(){
+string Item::getName(){
 	return name;
 }
-char* Item::getDescription(){
+string Item::getDescription(){
 	return description;
 }
-char* Item::getStatus(){
+string Item::getStatus(){
 	return status;
 }
-char* Item::getWriting(){
+string Item::getWriting(){
 	return writting;
 }
 turnon* Item::getTurnOn(){

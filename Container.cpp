@@ -10,15 +10,14 @@
 
 using namespace std;
 
-Container::Container(char* n, char* d): name(n), description(d){
-	status = NULL;
+Container::Container(string n, string d): name(n), description(d){
 	item = NULL;
 	accept = NULL;
 }
 
 Container::~Container(){}
 
-void Container::setStatus(char* c){
+void Container::setStatus(string c){
 	status = c;
 }
 void Container::setAccept(Item* i){
@@ -31,13 +30,13 @@ void Container::addTrigger(Trigger* t){
 	triggers.push_back(t);
 }
 
-char* Container::getName(){
+string Container::getName(){
 	return name;
 }
-char* Container::getDescription(){
+string Container::getDescription(){
 	return description;
 }
-char* Container::getStatus(){
+string Container::getStatus(){
 	return status;
 }
 Item* Container::getAccept(){

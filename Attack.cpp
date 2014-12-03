@@ -11,26 +11,24 @@
 
 using namespace std;
 
-Attack::Attack(){
-	print = NULL;
-}
+Attack::Attack(){}
 
 Attack::~Attack(){}
 
-void Attack::setPrint(char* c){
+void Attack::setPrint(string c){
 	print = c;
 }
-void Attack::addAction(char* c){
+void Attack::addAction(string c){
 	actions.push_back(c);
 }
 void Attack::addCondition(condition* c){
 	conditions.push_back(c);
 }
 
-char* Attack::getPrint(){
+string Attack::getPrint(){
 	return print;
 }
-vector<char*> Attack::getActions(){
+vector<string> Attack::getActions(){
 	return actions;
 }
 vector<condition*> Attack::getConditions(){

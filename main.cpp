@@ -366,6 +366,185 @@ vector<string> split(string s){
 	return v;
 }
 
+bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
+//	vector<Item*> inventory = *inventoryP;
+	bool nextRoom = false;
+	bool triggerMet = false;
+	vector<Trigger*> triggers = curRoom->getTriggers();
+	for(vector<Trigger*>::size_type i = 0; i != triggers.size(); i++){
+		Trigger* t = triggers[i];
+		if(input == t->getCommand()){
+			bool conditionMet = false;
+			// Trigger is set off, check conditions
+			vector<condition*> conditions = t->getConditions();
+			for(vector<condition*>::size_type j = 0; j != conditions.size(); j++){
+				condition* c = conditions[j];
+
+				// Conditions can mean so many things... Case by case for now
+				if(c->owner == "inventory"){
+					conditionMet = !c->has;
+					if(inventory.size() > 0){
+						for(vector<Item*>::size_type k = 0; k != inventory.size(); k++){
+							if(inventory[k]->getName() == c->objectI->getName()){
+								conditionMet = !conditionMet;
+								break;
+							}
+						}
+					}
+				}else{ // status check on an object
+					if(c->objectC != NULL && c->objectC->getStatus() == c->status){
+						conditionMet = true;
+					}else if(c->objectI != NULL && c->objectI->getStatus() == c->status){
+						conditionMet = true;
+					}
+
+				}
+				break;
+			}
+			if(conditionMet){
+				cout << t->getPrint() << endl;
+				triggerMet = true;
+				break;
+			}
+		}
+	}
+	if(triggerMet){
+		return false; // Trigger is met, ask user for another input;
+	}
+
+	if(input == "n" || input == "e" || input == "s" || input == "w"){
+		// User attempting to move
+		vector<border*> borders = curRoom->getBorders();
+		bool moving = false;
+		for(vector<border*>::size_type i = 0; i != borders.size(); i++){
+			// Moving user to next room
+//					cout << borders[i]->direction << endl;
+			if(borders[i]->direction == input[0]){
+				nextRoom = true;
+				moving = true;
+				curRoom = borders[i]->room;
+				break;
+			}
+		}
+		if(!moving){
+			cout << "Can't go that way." << endl;
+		}
+	}else if(input == "i"){
+		// List inventory items
+		cout << "Inventory: ";
+		if(inventory.size() == 0){
+			cout << "empty" << endl;
+		}else{
+			bool first = true;
+			for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+				if(first){
+					first = false;
+					cout << inventory[i]->getName();
+				}else{
+					cout << ", " << inventory[i]->getName();
+				}
+			}
+			cout << endl;
+		}
+	}else if(input == "Game Over"){
+		cout << "Victory!" << endl;
+		exit(0);
+	}else{
+		vector<string> v = split(input); // Splits input on spaces
+		if(v.size() > 1){
+			string command = v[0];
+			string second = v[1];
+
+			if(command == "take"){
+				// Try to take something
+				// Move item from room to inventory
+				vector<Item*> items = curRoom->getItems();
+				bool found = false;
+				for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+//							cout << second << " : " << items[i]->getName() << endl;
+					if(second == items[i]->getName()){
+						inventory.push_back(items[i]);
+//								items.erase(items.begin() + i);
+						curRoom->removeItem(items[i]);
+						cout << "Item " << second << " added to inventory." << endl;
+						found = true;
+						break;
+					}
+				}
+				vector<Container*> containers = curRoom->getContainers();
+				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+					if(containers[i]->getStatus() == "open"){
+						if(containers[i]->getItem()->getName() == second){
+							inventory.push_back(containers[i]->getItem());
+							containers[i]->setItem(NULL);
+							cout << "Item " << second << " added to inventory." << endl;
+							containers[i]->setStatus("empty");
+							found = true;
+							break;
+						}
+					}
+				}
+				if(!found){
+					cout << "Error" << endl;
+				}
+			}else if(command == "open"){
+				// Try to open something
+				// Move items from container to room
+				vector<Container*> containers = curRoom->getContainers();
+				bool found = false;
+				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+					if(second == containers[i]->getName()){
+						Item* item = containers[i]->getItem();
+						if(containers[i]->getStatus() == "empty"){
+							cout << second << " is empty." << endl;
+						}else{
+//							curRoom->addItem(item);
+//							containers[i]->setItem(NULL);
+							containers[i]->setStatus("open");
+							cout << second << " contains " << item->getName() << "." << endl;
+						}
+						found = true;
+						break;
+					}
+				}
+				if(!found){
+					cout << "Error" << endl;
+				}
+			}else if(command == "read"){
+				// Try to read something
+			}else if(command == "drop"){
+				// Try to drop seomthing
+				// Move item from inventory to room
+				bool found = false;
+				for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+					if(second == inventory[i]->getName()){
+						vector<Item*> items = curRoom->getItems();
+						curRoom->addItem(inventory[i]);
+						inventory.erase(inventory.begin() + i);
+						cout << second << " dropped." << endl;
+						found = true;
+						break;
+					}
+				}
+				if(!found){
+					cout << "Error" << endl;
+				}
+			}else if(command == "put" && v.size() >= 4){
+				// Analyze put command
+			}else if(command == "turn" && second == "on" && v.size() >= 3){
+				// Try to turn something on
+			}else if(command == "attack" && v.size() >= 4){
+				// Analyze attack command
+			}else{
+				cout << "Error" << endl;
+			}
+		}else{
+			cout << "Error" << endl;
+		}
+	}
+	return nextRoom;
+}
+
 
 int main () {
 	string line;
@@ -413,177 +592,7 @@ int main () {
 //			cin >> input;
 			getline(cin, input);
 
-//			cout << curRoom->getBorders().size() << endl;
-			// Check triggers
-			bool triggerMet = false;
-			vector<Trigger*> triggers = curRoom->getTriggers();
-			for(vector<Trigger*>::size_type i = 0; i != triggers.size(); i++){
-				Trigger* t = triggers[i];
-				cout << "test3" << endl;
-				if(input == t->getCommand()){
-					cout << "test4" << endl;
-					bool conditionMet = false;
-					// Trigger is set off, check conditions
-					vector<condition*> conditions = t->getConditions();
-					for(vector<condition*>::size_type j = 0; j != conditions.size(); j++){
-						condition* c = conditions[j];
-						cout << c->status << endl;
-
-						// Conditions can mean so many things... Case by case for now
-						if(c->owner == "inventory"){
-							cout << "test5" << endl;
-							conditionMet = !c->has;
-							if(inventory.size() > 0){
-								for(vector<Item*>::size_type k = 0; k != inventory.size(); k++){
-									if(inventory[k]->getName() == c->objectI->getName()){
-										conditionMet = !conditionMet;
-										break;
-									}
-								}
-							}
-						}else{ // status check on an object
-							cout << "test1" << endl;
-							if(c->objectC != NULL && c->objectC->getStatus() == c->status){
-								conditionMet = true;
-							}else if(c->objectI != NULL && c->objectI->getStatus() == c->status){
-								conditionMet = true;
-							}
-							cout << "test2" << endl;
-
-						}
-						break;
-					}
-					if(conditionMet){
-						cout << t->getPrint() << endl;
-						triggerMet = true;
-						break;
-					}
-				}
-			}
-			if(triggerMet){
-				continue; // Trigger is met, ask user for another input;
-			}
-
-			if(input == "n" || input == "e" || input == "s" || input == "w"){
-				// User attempting to move
-				vector<border*> borders = curRoom->getBorders();
-				bool moving = false;
-				for(vector<border*>::size_type i = 0; i != borders.size(); i++){
-					// Moving user to next room
-//					cout << borders[i]->direction << endl;
-					if(borders[i]->direction == input[0]){
-						nextRoom = true;
-						moving = true;
-						curRoom = borders[i]->room;
-						break;
-					}
-				}
-				if(!moving){
-					cout << "Can't go that way." << endl;
-				}
-			}else if(input == "i"){
-				// List inventory items
-				cout << "Inventory: ";
-				if(inventory.size() == 0){
-					cout << "empty" << endl;
-				}else{
-					bool first = true;
-					for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
-						if(first){
-							first = false;
-							cout << inventory[i]->getName();
-						}else{
-							cout << ", " << inventory[i]->getName();
-						}
-					}
-					cout << endl;
-				}
-			}else if(input == "Game Over"){
-				cout << "Victory!" << endl;
-				return 0;
-			}else{
-				vector<string> v = split(input); // Splits input on spaces
-				if(v.size() > 1){
-					string command = v[0];
-					string second = v[1];
-
-					if(command == "take"){
-						// Try to take something
-						// Move item from room to inventory
-						vector<Item*> items = curRoom->getItems();
-						cout << items.size() << endl;
-						bool found = false;
-						for(vector<Item*>::size_type i = 0; i != items.size(); i++){
-//							cout << second << " : " << items[i]->getName() << endl;
-							if(second == items[i]->getName()){
-								inventory.push_back(items[i]);
-//								items.erase(items.begin() + i);
-								curRoom->removeItem(items[i]);
-								cout << "Item " << second << " added to inventory." << endl;
-								found = true;
-								break;
-							}
-						}
-						if(!found){
-							cout << "Error" << endl;
-						}
-					}else if(command == "open"){
-						// Try to open something
-						// Move items from container to room
-						vector<Container*> containers = curRoom->getContainers();
-						bool found = false;
-						for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
-							if(second == containers[i]->getName()){
-								Item* item = containers[i]->getItem();
-								if(item == NULL){
-									cout << second << " is empty." << endl;
-								}else{
-									curRoom->addItem(item);
-									containers[i]->setItem(NULL);
-									cout << second << " contains " << item->getName() << "." << endl;
-								}
-								found = true;
-								break;
-							}
-						}
-						if(!found){
-							cout << "Error" << endl;
-						}
-					}else if(command == "read"){
-						// Try to read something
-					}else if(command == "drop"){
-						// Try to drop seomthing
-						// Move item from inventory to room
-						bool found = false;
-						for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
-							if(second == inventory[i]->getName()){
-								vector<Item*> items = curRoom->getItems();
-								curRoom->addItem(inventory[i]);
-								inventory.erase(inventory.begin() + i);
-								cout << second << " dropped." << endl;
-								found = true;
-								break;
-							}
-						}
-						if(!found){
-							cout << "Error" << endl;
-						}
-					}else if(command == "put" && v.size() >= 4){
-						// Analyze put command
-					}else if(command == "turn" && second == "on" && v.size() >= 3){
-						// Try to turn something on
-					}else if(command == "attack" && v.size() >= 4){
-						// Analyze attack command
-					}else{
-						cout << "Error" << endl;
-					}
-				}else{
-					cout << "Error" << endl;
-				}
-//				for(vector<string>::size_type i = 0; i != v.size(); i++){
-//					cout << "\"" << v[i] << "\"" << endl;
-//				}
-			}
+			nextRoom = analyzeInput(curRoom, inventory, input);
 		}
 
 	}

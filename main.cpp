@@ -45,7 +45,7 @@ void parseAttack(Map* gameMap, xml_node<> *node, Attack* attack){
 				c->has = false;
 
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
-				if(object == v[i]->getName()){
+				if((string)object == v[i]->getName()){
 					c->object = v[i];
 					break;
 				}
@@ -103,7 +103,7 @@ void parseTrigger(Map* gameMap, xml_node<> *node, Trigger* trigger){
 				c->has = false;
 
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
-				if(object == v[i]->getName()){
+				if((string)object == v[i]->getName()){
 					c->object = v[i];
 					break;
 				}
@@ -210,9 +210,7 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 		}else if(type == "item"){
 			vector<Item*> v = gameMap->getItems();
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
-//				cout << child->value() << ":" << v[i]->getName() << endl;
 				if((string)child->value() == v[i]->getName()){
-//					cout << "Added item " << v[i]->getName() << " to " << room->getName() << endl;
 					room->addItem(v[i]);
 					break;
 				}
@@ -238,9 +236,9 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 			char* name = child->first_node("name", 4, false)->value();
 			char* direction = child->first_node("direction", 9, false)->value();
 			for(vector<Room*>::size_type i = 0; i != v.size(); i++){
-				if(name == v[i]->getName()){
+				if((string)name == v[i]->getName()){
 					border *b = new border();
-					b->direction = direction;
+					b->direction = direction[0];
 					b->room = v[i];
 					room->addBorder(b);
 					break;
@@ -395,6 +393,7 @@ int main () {
 //			cin >> input;
 			getline(cin, input);
 
+			cout << curRoom->getBorders().size() << endl;
 			// Check triggers
 			bool triggerMet = false;
 			vector<Trigger*> triggers = curRoom->getTriggers();
@@ -410,9 +409,12 @@ int main () {
 						// Conditions can mean so many things... Case by case for now
 						if((string)c->owner == "inventory"){
 							conditionMet = !c->has;
-							for(vector<Item*>::size_type j = 0; j != inventory.size(); j++){
-								if(inventory[j]->getName() == c->object->getName()){
-									conditionMet = !conditionMet;
+							if(inventory.size() > 0){
+								for(vector<Item*>::size_type j = 0; j != inventory.size(); j++){
+									if(inventory[j]->getName() == c->object->getName()){
+										conditionMet = !conditionMet;
+										break;
+									}
 								}
 							}
 						}
@@ -434,12 +436,12 @@ int main () {
 				vector<border*> borders = curRoom->getBorders();
 				bool moving = false;
 				for(vector<border*>::size_type i = 0; i != borders.size(); i++){
-					border* b = borders[i];
 					// Moving user to next room
-					if((string)b->direction == input){
+					cout << borders[i]->direction << endl;
+					if(borders[i]->direction == input[0]){
 						nextRoom = true;
 						moving = true;
-						curRoom = b->room;
+						curRoom = borders[i]->room;
 						break;
 					}
 				}
@@ -505,6 +507,7 @@ int main () {
 								}else{
 									curRoom->addItem(item);
 									containers[i]->setItem(NULL);
+									cout << second << " contains " << item->getName() << "." << endl;
 								}
 								found = true;
 								break;

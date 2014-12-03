@@ -20,7 +20,7 @@ using namespace std;
 class Room; // Not sure if will work;
 
 struct border {
-	char* direction;
+	char direction;
 	Room* room;
 };
 

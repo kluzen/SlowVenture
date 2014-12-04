@@ -7,7 +7,9 @@
 using namespace std;
 using namespace rapidxml;
 
-void parseAttack(Map* gameMap, xml_node<> *node, Attack* attack){
+Map* gameMap;
+
+void parseAttack(xml_node<> *node, Attack* attack){
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
 
@@ -67,7 +69,7 @@ void parseAttack(Map* gameMap, xml_node<> *node, Attack* attack){
 
 }
 
-void parseTrigger(Map* gameMap, xml_node<> *node, Trigger* trigger){
+void parseTrigger(xml_node<> *node, Trigger* trigger){
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
 
@@ -134,7 +136,7 @@ void parseTrigger(Map* gameMap, xml_node<> *node, Trigger* trigger){
 	}
 }
 
-void parseItem(Map* gameMap, xml_node<> *node, Item* item){
+void parseItem(xml_node<> *node, Item* item){
 
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
@@ -152,14 +154,14 @@ void parseItem(Map* gameMap, xml_node<> *node, Item* item){
 			item->setTurnOn(t);
 		}else if(type == "trigger"){
 			Trigger *t = new Trigger();
-			parseTrigger(gameMap, child, t);
+			parseTrigger(child, t);
 			item->addTrigger(t);
 		}
 
 	}
 }
 
-void parseContainer(Map* gameMap, xml_node<> *node, Container* container){
+void parseContainer(xml_node<> *node, Container* container){
 
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
@@ -184,14 +186,14 @@ void parseContainer(Map* gameMap, xml_node<> *node, Container* container){
 			}
 		}else if(type == "trigger"){
 			Trigger *t = new Trigger();
-			parseTrigger(gameMap, child, t);
+			parseTrigger(child, t);
 			container->addTrigger(t);
 		}
 
 	}
 }
 
-void parseCreature(Map* gameMap, xml_node<> *node, Creature* creature){
+void parseCreature(xml_node<> *node, Creature* creature){
 
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
@@ -208,18 +210,18 @@ void parseCreature(Map* gameMap, xml_node<> *node, Creature* creature){
 			}
 		}else if(type == "attack"){
 			Attack *a = new Attack();
-			parseAttack(gameMap, child, a);
+			parseAttack(child, a);
 			creature->setAttack(a);
 		}else if(type == "trigger"){
 			Trigger *t = new Trigger();
-			parseTrigger(gameMap, child, t);
+			parseTrigger(child, t);
 			creature->addTrigger(t);
 		}
 
 	}
 }
 
-void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
+void parseRoom(xml_node<> *node, Room* room){
 
 	for(xml_node<> *child = node->first_node(); child; child = child->next_sibling()){
 		string type = child->name();
@@ -266,7 +268,7 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 			}
 		}else if(type == "trigger"){
 			Trigger *t = new Trigger();
-			parseTrigger(gameMap, child, t);
+			parseTrigger(child, t);
 			room->addTrigger(t);
 		}
 
@@ -275,7 +277,7 @@ void parseRoom(Map* gameMap, xml_node<> *node, Room* room){
 
 
 // Prepares the map with the rooms, items, containers, and creatures
-void parseMapNode(Map* gameMap, xml_node<> *node){
+void parseMapNode(xml_node<> *node){
 	xml_node<> *testNode;
 	string name;
 	string desc;
@@ -307,7 +309,7 @@ void parseMapNode(Map* gameMap, xml_node<> *node){
 }
 
 // Fully parses the nodes and links them together
-void parseNode(Map* gameMap, xml_node<> *node){
+void parseNode(xml_node<> *node){
 	string name = node->first_node("name", 4, false)->value();
 	string nodeName = node->name();
 
@@ -315,7 +317,7 @@ void parseNode(Map* gameMap, xml_node<> *node){
 		vector<Room*> v = gameMap->getRooms();
 		for(vector<Room*>::size_type i = 0; i != v.size(); i++){
 			if(name == v[i]->getName()){
-				parseRoom(gameMap, node, v[i]);
+				parseRoom(node, v[i]);
 				break;
 			}
 		}
@@ -323,7 +325,7 @@ void parseNode(Map* gameMap, xml_node<> *node){
 		vector<Item*> v = gameMap->getItems();
 		for(vector<Item*>::size_type i = 0; i != v.size(); i++){
 			if(name == v[i]->getName()){
-				parseItem(gameMap, node, v[i]);
+				parseItem(node, v[i]);
 				break;
 			}
 		}
@@ -331,7 +333,7 @@ void parseNode(Map* gameMap, xml_node<> *node){
 		vector<Container*> v = gameMap->getContainers();
 		for(vector<Container*>::size_type i = 0; i != v.size(); i++){
 			if(name == v[i]->getName()){
-				parseContainer(gameMap, node, v[i]);
+				parseContainer(node, v[i]);
 				break;
 			}
 		}
@@ -339,7 +341,7 @@ void parseNode(Map* gameMap, xml_node<> *node){
 		vector<Creature*> v = gameMap->getCreatures();
 		for(vector<Creature*>::size_type i = 0; i != v.size(); i++){
 			if(name == v[i]->getName()){
-				parseCreature(gameMap, node, v[i]);
+				parseCreature(node, v[i]);
 				break;
 			}
 		}
@@ -373,9 +375,85 @@ void analyzeSudoInput(Room* &curRoom, vector<Item*> &inventory, string input){
 
 	if(command == "Update"){
 		// Updates status of some item
-		for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
-			if(inventory[i]->getName() == second){
-				inventory[i]->setStatus(v[3]);
+		vector<Item*> items = gameMap->getItems();
+		for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+			if(items[i]->getName() == second){
+				items[i]->setStatus(v[3]);
+			}
+		}
+		vector<Container*> containers = gameMap->getContainers();
+		for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+			if(containers[i]->getName() == second){
+				containers[i]->setStatus(v[3]);
+			}
+		}
+
+	}else if(command == "Add"){
+		// Adds an item to room or container
+		vector<Room*> rooms = gameMap->getRooms();
+		vector<Item*> items = gameMap->getItems();
+		Item* item;
+		bool found = false;
+
+		// Find item
+		for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+			if(items[i]->getName() == second){
+				item = items[i];
+				break;
+			}
+		}
+
+		// Find room
+		for(vector<Room*>::size_type i = 0; i != rooms.size(); i++){
+			if(rooms[i]->getName() == v[3]){
+				found = true;
+				rooms[i]->addItem(item);
+				break;
+			}
+		}
+		if(!found){
+			// Room not found, look for container
+			vector<Container*> containers = gameMap->getContainers();
+			for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+				if(containers[i]->getName() == v[3]){
+					containers[i]->setItem(item);
+					break;
+				}
+			}
+		}
+	}else if(command == "Delete"){
+//		vector<Room*> rooms = gameMap->getRooms();
+//		for(vector<Room*>::size_type i = 0; i != rooms.size(); i++){
+//			vector<Creature*> rc = rooms[i]->getCreatures();
+//			for(vector<Creature*>::size_type j = 0; j != rc.size(); j++){
+//				if(rc[j]->getName() == second){
+//					rc.erase(rc.begin() + j);
+//				}
+//			}
+//		}
+	}
+
+	// See if that triggers something for a creature
+	vector<Creature*> creatures = curRoom->getCreatures();
+	for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+		vector<Trigger*> triggers = creatures[i]->getTriggers();
+		for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
+			if(triggers[j]->getStatus() != "disabled"){
+				bool conditionMet = false;
+				vector<condition*> conditions = triggers[j]->getConditions();
+				for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
+					condition* c = conditions[k];
+					if(c->objectI != NULL && c->objectI->getStatus() == c->status){
+						conditionMet = true;
+						break;
+					}
+				}
+				if(conditionMet){
+					cout << triggers[j]->getPrint() << endl;
+					if(triggers[j]->getType() == "single"){
+						triggers[j]->setStatus("disabled");
+					}
+				}
 			}
 		}
 	}
@@ -385,6 +463,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 //	vector<Item*> inventory = *inventoryP;
 	bool nextRoom = false;
 	bool triggerMet = false;
+	// Check triggers in the current room
 	vector<Trigger*> triggers = curRoom->getTriggers();
 	for(vector<Trigger*>::size_type i = 0; i != triggers.size(); i++){
 		Trigger* t = triggers[i];
@@ -423,6 +502,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 			}
 		}
 	}
+
 	if(triggerMet){
 		return false; // Trigger is met, ask user for another input;
 	}
@@ -464,6 +544,11 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 	}else if(input == "Game Over"){
 		cout << "Victory!" << endl;
 		exit(0);
+	}else if(input == "open exit"){
+		if(curRoom->getType() == "exit"){
+			cout << "Victory!" << endl;
+			exit(0);
+		}
 	}else{
 		vector<string> v = split(input); // Splits input on spaces
 		if(v.size() > 1){
@@ -557,6 +642,59 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				}
 			}else if(command == "put" && v.size() >= 4){
 				// Analyze put command
+				// Move item from inventory to container
+				bool found1 = false;
+				bool found2 = false;
+				vector<Item*>::size_type place = 0;
+				for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
+					if(second == inventory[i]->getName()){
+						place = i;
+						found1 = true;
+						break;
+					}
+				}
+				vector<Container*> containers = curRoom->getContainers();
+				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+					if(v[3] == containers[i]->getName()){
+						if(containers[i]->getStatus() == "empty"){
+							if(found1){
+								containers[i]->setItem(inventory[place]);
+								containers[i]->setStatus("open");
+								inventory.erase(inventory.begin() + place);
+								cout << "Item " << second << " added to " << v[3] << "." << endl;
+							}
+							found2 = true;
+							break;
+						}else if(containers[i]->getStatus() == "locked" && containers[i]->getAccept() == inventory[place]){
+							if(found1){
+								containers[i]->setItem(inventory[place]);
+								inventory.erase(inventory.begin() + place);
+								vector<Trigger*> triggers = containers[i]->getTriggers();
+								for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
+									bool conditionMet = false;
+									vector<condition*> conditions = triggers[j]->getConditions();
+									for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
+										if(conditions[k]->owner == containers[i]->getName()){
+											bool c = ~((conditions[k]->has) ^ (conditions[k]->objectI == containers[i]->getItem()));
+											if(c){
+												conditionMet = true;
+												break;
+											}
+										}
+									}
+									if(conditionMet){
+										found2 = true;
+										cout << triggers[j]->getPrint() << endl;
+										analyzeSudoInput(curRoom, inventory, triggers[j]->getAction());
+									}
+								}
+							}
+						}
+					}
+				}
+				if(!found1 || !found2){
+					cout << "Error" << endl;
+				}
 			}else if(command == "turn" && second == "on" && v.size() >= 3){
 				// Try to turn something on
 				bool found = false;
@@ -574,6 +712,53 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				}
 			}else if(command == "attack" && v.size() >= 4){
 				// Analyze attack command
+				bool match = false;
+				vector<Creature*> creatures = curRoom->getCreatures();
+				for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+					if(second == creatures[i]->getName()){
+						// Creature found
+						for(vector<Item*>::size_type j = 0; j != inventory.size(); j++){
+							if(v[3] == inventory[j]->getName()){
+								// Player has attacking item
+								vector<Item*> vulnerabilities = creatures[i]->getVulnerabilities();
+								for(vector<Item*>::size_type k = 0; k != vulnerabilities.size(); k++){
+									if(v[3] == vulnerabilities[k]->getName()){
+										// Item used is a vulnerability
+										Attack* a = creatures[i]->getAttack();
+										// Analyze attack conditions
+										bool conditionMet = false;
+
+										vector<condition*> conditions = a->getConditions();
+										for(vector<condition*>::size_type l = 0; l != conditions.size(); l++){
+											if(conditions[l]->status == inventory[j]->getStatus()){
+												conditionMet = true;
+												match = true;
+												break;
+											}
+										}
+
+										if(conditionMet){
+											cout << a->getPrint() << endl;
+											vector<string> actions = a->getActions();
+
+											for(vector<string>::size_type m = 0; m != actions.size(); m++){
+												analyzeSudoInput(curRoom, inventory, actions[m]);
+											}
+										}
+
+									}
+								}
+
+
+							}
+						}
+
+					}
+				}
+				if(!match){
+					cout << "Error" << endl;
+				}
+
 			}else{
 				cout << "Error" << endl;
 			}
@@ -600,16 +785,16 @@ int main () {
 	xml_document<> doc;
 	doc.parse<0>((char*)content.c_str());
 
-	Map* gameMap = new Map();
+	gameMap = new Map();
 
 	// Prepares the map with the rooms, items, containers, and creatures
 	for(xml_node<> *child = doc.first_node()->first_node(); child; child = child->next_sibling()){
-		parseMapNode(gameMap, child);
+		parseMapNode(child);
 	}
 
 	// Fully parses the nodes and links them together
 	for(xml_node<> *child = doc.first_node()->first_node(); child; child = child->next_sibling()){
-		parseNode(gameMap, child);
+		parseNode(child);
 	}
 
 	// User's inventory starting empty

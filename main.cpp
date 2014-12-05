@@ -387,7 +387,6 @@ void analyzeSudoInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				containers[i]->setStatus(v[3]);
 			}
 		}
-
 	}else if(command == "Add"){
 		// Adds an item to room or container
 		vector<Room*> rooms = gameMap->getRooms();
@@ -433,30 +432,7 @@ void analyzeSudoInput(Room* &curRoom, vector<Item*> &inventory, string input){
 //		}
 	}
 
-	// See if that triggers something for a creature
-	vector<Creature*> creatures = curRoom->getCreatures();
-	for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
-		vector<Trigger*> triggers = creatures[i]->getTriggers();
-		for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
-			if(triggers[j]->getStatus() != "disabled"){
-				bool conditionMet = false;
-				vector<condition*> conditions = triggers[j]->getConditions();
-				for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
-					condition* c = conditions[k];
-					if(c->objectI != NULL && c->objectI->getStatus() == c->status){
-						conditionMet = true;
-						break;
-					}
-				}
-				if(conditionMet){
-					cout << triggers[j]->getPrint() << endl;
-					if(triggers[j]->getType() == "single"){
-						triggers[j]->setStatus("disabled");
-					}
-				}
-			}
-		}
-	}
+
 }
 
 bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
@@ -546,8 +522,10 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 		exit(0);
 	}else if(input == "open exit"){
 		if(curRoom->getType() == "exit"){
-			cout << "Victory!" << endl;
+			cout << "Game Over" << endl;
 			exit(0);
+		}else{
+			cout << "Error" << endl;
 		}
 	}else{
 		vector<string> v = split(input); // Splits input on spaces
@@ -685,7 +663,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 									if(conditionMet){
 										found2 = true;
 										cout << triggers[j]->getPrint() << endl;
-										analyzeSudoInput(curRoom, inventory, triggers[j]->getAction());
+										analyzeInput(curRoom, inventory, triggers[j]->getAction());
 									}
 								}
 							}
@@ -699,10 +677,10 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				// Try to turn something on
 				bool found = false;
 				for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
-					if(v[2] == inventory[i]->getName()){
+					if(v[2] == inventory[i]->getName() && inventory[i]->getTurnOn() != NULL){
 						cout << "You activate the " << v[2] << "." << endl;
 						cout << inventory[i]->getTurnOn()->print << endl;
-						analyzeSudoInput(curRoom, inventory, inventory[i]->getTurnOn()->action);
+						analyzeInput(curRoom, inventory, inventory[i]->getTurnOn()->action);
 						found = true;
 						break;
 					}
@@ -742,7 +720,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 											vector<string> actions = a->getActions();
 
 											for(vector<string>::size_type m = 0; m != actions.size(); m++){
-												analyzeSudoInput(curRoom, inventory, actions[m]);
+												analyzeInput(curRoom, inventory, actions[m]);
 											}
 										}
 
@@ -759,9 +737,93 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					cout << "Error" << endl;
 				}
 
+			}else if(command == "Update"){
+				// Updates status of some item
+				vector<Item*> items = gameMap->getItems();
+				for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+					if(items[i]->getName() == second){
+						items[i]->setStatus(v[3]);
+					}
+				}
+				vector<Container*> containers = gameMap->getContainers();
+				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+					if(containers[i]->getName() == second){
+						containers[i]->setStatus(v[3]);
+					}
+				}
+			}else if(command == "Add"){
+				// Adds an item to room or container
+				vector<Room*> rooms = gameMap->getRooms();
+				vector<Item*> items = gameMap->getItems();
+				Item* item;
+				bool found = false;
+
+				// Find item
+				for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+					if(items[i]->getName() == second){
+						item = items[i];
+						break;
+					}
+				}
+
+				// Find room
+				for(vector<Room*>::size_type i = 0; i != rooms.size(); i++){
+					if(rooms[i]->getName() == v[3]){
+						found = true;
+						rooms[i]->addItem(item);
+						break;
+					}
+				}
+				if(!found){
+					// Room not found, look for container
+					vector<Container*> containers = gameMap->getContainers();
+					for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
+						if(containers[i]->getName() == v[3]){
+							containers[i]->setItem(item);
+							break;
+						}
+					}
+				}
+			}else if(command == "Delete"){
+				//		vector<Room*> rooms = gameMap->getRooms();
+				//		for(vector<Room*>::size_type i = 0; i != rooms.size(); i++){
+				//			vector<Creature*> rc = rooms[i]->getCreatures();
+				//			for(vector<Creature*>::size_type j = 0; j != rc.size(); j++){
+				//				if(rc[j]->getName() == second){
+				//					rc.erase(rc.begin() + j);
+				//				}
+				//			}
+				//		}
 			}else{
 				cout << "Error" << endl;
 			}
+
+			// See if that triggers something for a creature
+			vector<Creature*> creatures = curRoom->getCreatures();
+			for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+				vector<Trigger*> triggers = creatures[i]->getTriggers();
+				for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
+					if(triggers[j]->getStatus() != "disabled"){
+						bool conditionMet = false;
+						vector<condition*> conditions = triggers[j]->getConditions();
+						for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
+							condition* c = conditions[k];
+							if(c->objectI != NULL && c->objectI->getStatus() == c->status){
+								conditionMet = true;
+								break;
+							}
+						}
+						if(conditionMet){
+							cout << triggers[j]->getPrint() << endl;
+							if(triggers[j]->getType() == "single"){
+								triggers[j]->setStatus("disabled");
+							}
+						}
+					}
+				}
+			}
+
+
 		}else{
 			cout << "Error" << endl;
 		}
@@ -770,11 +832,22 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 }
 
 
-int main () {
+int main (int argc, char* argv[]) {
+	if(argc < 2){
+		cerr << "Usage: " << argv[0] << " input_file.xml" << endl;
+		return 1;
+	}
+
+
 	string line;
 	string content;
 	ifstream myfile;
-	myfile.open ("samples/sample.txt.xml");
+	myfile.open (argv[1]);
+	if(!myfile.good()){
+		cerr << "Invalid file" << endl;
+		return 1;
+	}
+
 	if(myfile.is_open()){
 	  while(getline(myfile, line)){
 		  content += line + '\n';

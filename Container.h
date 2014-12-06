@@ -22,22 +22,29 @@ public:
 	Container(string,string);
 	virtual ~Container();
 	void setStatus(string);
-	void setAccept(Item*);
-	void setItem(Item*);
+	void setOpen(bool);
+	void addAccept(string);
+	void addItem(Item*);
 	void addTrigger(Trigger*);
+
+	bool doesAccept(string);
+	bool hasItem(string);
+	void removeItem(string);
+	Item* getItem(string);
 
 	string getName();
 	string getDescription();
 	string getStatus();
-	Item* getAccept();
-	Item* getItem();
+	bool isOpen();
+	vector<Item*> getItems();
 	vector<Trigger*> getTriggers();
 private:
 	string name;
 	string description;
 	string status;
-	Item* accept;
-	Item* item;
+	bool open;
+	vector<string> accepts;
+	vector<Item*> items;
 	vector<Trigger*> triggers;
 };
 

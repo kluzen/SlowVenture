@@ -23,14 +23,48 @@ void Room::setStatus(string c){
 void Room::addItem(Item* i){
 	items.push_back(i);
 }
-void Room::removeItem(Item* item){
+
+bool Room::hasItem(string s){
 	for(vector<Item*>::size_type i = 0; i != items.size(); i++){
-		if(item == items[i]){
+		if(items[i]->getName() == s){
+			return true;
+		}
+	}
+	return false;
+}
+void Room::removeItem(string s){
+	for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+		if(items[i]->getName() == s){
 			items.erase(items.begin() + i);
 			return;
 		}
 	}
 }
+Item* Room::getItem(string s){
+	for(vector<Item*>::size_type i = 0; i != items.size(); i++){
+		if(items[i]->getName() == s){
+			return items[i];
+		}
+	}
+	return NULL;
+}
+bool Room::hasContainer(string s){
+	for(vector<Item*>::size_type i = 0; i != containers.size(); i++){
+		if(containers[i]->getName() == s){
+			return true;
+		}
+	}
+	return false;
+}
+Container* Room::getContainer(string s){
+	for(vector<Item*>::size_type i = 0; i != containers.size(); i++){
+		if(containers[i]->getName() == s){
+			return containers[i];
+		}
+	}
+	return NULL;
+}
+
 void Room::addContainer(Container* c){
 	containers.push_back(c);
 }

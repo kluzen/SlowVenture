@@ -34,11 +34,17 @@ public:
 	void setStatus(string);
 	void setType(string);
 	void addItem(Item*);
-	void removeItem(Item*);
 	void addContainer(Container*);
 	void addCreature(Creature*);
 	void addBorder(border*);
 	void addTrigger(Trigger*);
+
+	void removeItem(string);
+	bool hasItem(string);
+	Item* getItem(string);
+	bool hasContainer(string);
+	Container* getContainer(string);
+//	bool hasCreature(Creature*);
 
 	string getName();
 	string getDescription();

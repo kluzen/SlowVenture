@@ -172,7 +172,7 @@ void parseContainer(xml_node<> *node, Container* container){
 			vector<Item*> v = gameMap->getItems();
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
 				if(child->value() == v[i]->getName()){
-					container->setAccept(v[i]);
+					container->addAccept(child->value());
 					break;
 				}
 			}
@@ -180,7 +180,7 @@ void parseContainer(xml_node<> *node, Container* container){
 			vector<Item*> v = gameMap->getItems();
 			for(vector<Item*>::size_type i = 0; i != v.size(); i++){
 				if(child->value() == v[i]->getName()){
-					container->setItem(v[i]);
+					container->addItem(v[i]);
 					break;
 				}
 			}
@@ -415,7 +415,7 @@ void analyzeSudoInput(Room* &curRoom, vector<Item*> &inventory, string input){
 			vector<Container*> containers = gameMap->getContainers();
 			for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
 				if(containers[i]->getName() == v[3]){
-					containers[i]->setItem(item);
+					containers[i]->addItem(item);
 					break;
 				}
 			}
@@ -536,27 +536,20 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 			if(command == "take"){
 				// Try to take something
 				// Move item from room to inventory
-				vector<Item*> items = curRoom->getItems();
 				bool found = false;
-				for(vector<Item*>::size_type i = 0; i != items.size(); i++){
-//							cout << second << " : " << items[i]->getName() << endl;
-					if(second == items[i]->getName()){
-						inventory.push_back(items[i]);
-//								items.erase(items.begin() + i);
-						curRoom->removeItem(items[i]);
-						cout << "Item " << second << " added to inventory." << endl;
-						found = true;
-						break;
-					}
+				if(curRoom->hasItem(second)){
+					inventory.push_back(curRoom->getItem(second));
+					curRoom->removeItem(second);
+					cout << "Item " << second << " added to inventory." << endl;
+					found = true;
 				}
 				vector<Container*> containers = curRoom->getContainers();
 				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
-					if(containers[i]->getStatus() == "open"){
-						if(containers[i]->getItem()->getName() == second){
-							inventory.push_back(containers[i]->getItem());
-							containers[i]->setItem(NULL);
+					if(containers[i]->isOpen()){
+						if(containers[i]->hasItem(second)){
+							inventory.push_back(containers[i]->getItem(second));
+							containers[i]->removeItem(second);
 							cout << "Item " << second << " added to inventory." << endl;
-							containers[i]->setStatus("empty");
 							found = true;
 							break;
 						}
@@ -568,24 +561,21 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 			}else if(command == "open"){
 				// Try to open something
 				// Move items from container to room
-				vector<Container*> containers = curRoom->getContainers();
-				bool found = false;
-				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
-					if(second == containers[i]->getName()){
-						Item* item = containers[i]->getItem();
-						if(containers[i]->getStatus() == "empty"){
-							cout << second << " is empty." << endl;
-						}else{
-//							curRoom->addItem(item);
-//							containers[i]->setItem(NULL);
-							containers[i]->setStatus("open");
-							cout << second << " contains " << item->getName() << "." << endl;
+
+				if(curRoom->hasContainer(second)){
+					Container* c = curRoom->getContainer(second);
+					c->setOpen(true);
+					vector<Item*> items = c->getItems();
+					if(items.size() == 0){
+						cout << second << " is empty." << endl;
+					}else{
+						cout << second << " contains " << items[0]->getName();
+						for(vector<Item*>::size_type i = 1; i != items.size(); i++){
+							cout << ", " << items[i]->getName();
 						}
-						found = true;
-						break;
+						cout << "." << endl;
 					}
-				}
-				if(!found){
+				}else{
 					cout << "Error" << endl;
 				}
 			}else if(command == "read"){
@@ -593,7 +583,11 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				bool found = false;
 				for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
 					if(second == inventory[i]->getName()){
-						cout << inventory[i]->getWriting() << endl;
+						if(inventory[i]->getWriting().empty()){
+							cout << "Nothing written." << endl;
+						}else{
+							cout << inventory[i]->getWriting() << endl;
+						}
 						found = true;
 						break;
 					}
@@ -622,7 +616,6 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				// Analyze put command
 				// Move item from inventory to container
 				bool found1 = false;
-				bool found2 = false;
 				vector<Item*>::size_type place = 0;
 				for(vector<Item*>::size_type i = 0; i != inventory.size(); i++){
 					if(second == inventory[i]->getName()){
@@ -631,46 +624,43 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 						break;
 					}
 				}
-				vector<Container*> containers = curRoom->getContainers();
-				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
-					if(v[3] == containers[i]->getName()){
-						if(containers[i]->getStatus() == "empty"){
-							if(found1){
-								containers[i]->setItem(inventory[place]);
-								containers[i]->setStatus("open");
-								inventory.erase(inventory.begin() + place);
-								cout << "Item " << second << " added to " << v[3] << "." << endl;
-							}
-							found2 = true;
-							break;
-						}else if(containers[i]->getStatus() == "locked" && containers[i]->getAccept() == inventory[place]){
-							if(found1){
-								containers[i]->setItem(inventory[place]);
-								inventory.erase(inventory.begin() + place);
-								vector<Trigger*> triggers = containers[i]->getTriggers();
-								for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
-									bool conditionMet = false;
-									vector<condition*> conditions = triggers[j]->getConditions();
-									for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
-										if(conditions[k]->owner == containers[i]->getName()){
-											bool c = ~((conditions[k]->has) ^ (conditions[k]->objectI == containers[i]->getItem()));
-											if(c){
-												conditionMet = true;
-												break;
-											}
+
+				if(found1){ // Item is in inventory
+					if(curRoom->hasContainer(v[3])){
+						Container* c = curRoom->getContainer(v[3]);
+						Item* i = inventory[place];
+
+						if(c->doesAccept(i->getName())){
+							c->addItem(i);
+							inventory.erase(inventory.begin() + place);
+							cout << "Item " << second << " added to " << v[3] << "." << endl;
+
+							// Trigger check
+							vector<Trigger*> triggers = c->getTriggers();
+							for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
+								bool conditionMet = false;
+								vector<condition*> conditions = triggers[j]->getConditions();
+								for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
+									if(conditions[k]->owner == c->getName()){
+										bool b = ~((conditions[k]->has) ^ (c->hasItem(conditions[k]->objectI->getName())));//  conditions[k]->objectI == containers[i]->getItem()));
+										if(b){
+											conditionMet = true;
+											break;
 										}
 									}
-									if(conditionMet){
-										found2 = true;
-										cout << triggers[j]->getPrint() << endl;
-										analyzeInput(curRoom, inventory, triggers[j]->getAction());
-									}
+								}
+								if(conditionMet){
+									cout << triggers[j]->getPrint() << endl;
+									analyzeInput(curRoom, inventory, triggers[j]->getAction());
 								}
 							}
+						}else{
+							cout << "Error" << endl;
 						}
+					}else{
+						cout << "Error" << endl;
 					}
-				}
-				if(!found1 || !found2){
+				}else{
 					cout << "Error" << endl;
 				}
 			}else if(command == "turn" && second == "on" && v.size() >= 3){
@@ -779,7 +769,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					vector<Container*> containers = gameMap->getContainers();
 					for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
 						if(containers[i]->getName() == v[3]){
-							containers[i]->setItem(item);
+							containers[i]->addItem(item);
 							break;
 						}
 					}

@@ -10,6 +10,7 @@
 
 
 #include <vector>
+#include <string>
 
 #include "Room.h"
 #include "Container.h"
@@ -29,6 +30,11 @@ public:
 	void addContainer(Container*);
 	void addCreature(Creature*);
 	void addRoom(Room*);
+
+	bool isItem(string);
+	bool isContainer(string);
+	bool isCreature(string);
+	bool isRoom(string);
 
 	vector<Item*> getItems();
 	vector<Container*> getContainers();

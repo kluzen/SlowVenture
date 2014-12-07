@@ -34,7 +34,7 @@ public:
 	virtual ~Trigger();
 	void setType(string);
 	void setPrint(string);
-	void setAction(string);
+	void addAction(string);
 	void setOwner(string);
 	void setStatus(string);
 	void setCommand(string);
@@ -42,7 +42,7 @@ public:
 
 	string getType();
 	string getPrint();
-	string getAction();
+	vector<string> getActions();
 	string getOwner();
 	string getStatus();
 	string getCommand();
@@ -50,7 +50,7 @@ public:
 private:
 	string type;
 	string print;
-	string action;
+	vector<string> actions;
 	string owner;
 	string status;
 	string command;

@@ -20,8 +20,8 @@ void Trigger::setType(string c){
 void Trigger::setPrint(string c){
 	print = c;
 }
-void Trigger::setAction(string c){
-	action = c;
+void Trigger::addAction(string c){
+	actions.push_back(c);
 }
 void Trigger::setOwner(string c){
 	owner = c;
@@ -42,8 +42,8 @@ string Trigger::getType(){
 string Trigger::getPrint(){
 	return print;
 }
-string Trigger::getAction(){
-	return action;
+vector<string> Trigger::getActions(){
+	return actions;
 }
 string Trigger::getOwner(){
 	return owner;

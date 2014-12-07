@@ -80,7 +80,7 @@ void parseTrigger(xml_node<> *node, Trigger* trigger){
 		}else if(type == "print"){
 			trigger->setPrint(child->value());
 		}else if(type == "action"){
-			trigger->setAction(child->value());
+			trigger->addAction(child->value());
 		}else if(type == "owner"){
 			trigger->setOwner(child->value());
 		}else if(type == "command"){
@@ -368,54 +368,93 @@ vector<string> split(string s){
 	return v;
 }
 
+bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input);
+
+bool triggerCheck(Room* &curRoom, Trigger* &t, vector<Item*> &inventory, string input){
+	if(t->getType() == "disabled"){
+		return false;
+	}else if(t->getCommand().empty() || input == t->getCommand()){
+		bool conditionMet = false;
+		// Trigger is set off, check conditions
+		vector<condition*> conditions = t->getConditions();
+		for(vector<condition*>::size_type j = 0; j != conditions.size(); j++){
+			condition* c = conditions[j];
+
+			// Owner of an item check
+			if(c->owner == "inventory"){
+				conditionMet = !c->has;
+				if(inventory.size() > 0){
+					for(vector<Item*>::size_type k = 0; k != inventory.size(); k++){
+						if(inventory[k]->getName() == c->objectI->getName()){
+							conditionMet = !conditionMet;
+							break;
+						}
+					}
+				}
+//				}else if(!c->owner.empty()){ // Maybe not needed
+//					if(gameMap->isContainer(c->owner)){
+//
+//					}
+			}else{ // status check on an object
+				if(c->objectC != NULL && c->objectC->getStatus() == c->status){
+					conditionMet = true;
+				}else if(c->objectI != NULL && c->objectI->getStatus() == c->status){
+					conditionMet = true;
+				}
+
+			}
+			break;
+		}
+		if(conditionMet){
+			cout << t->getPrint() << endl;
+			if(t->getType() != "permanent"){
+				t->setType("disabled");
+			}
+			vector<string> actions = t->getActions();
+			bool nextRoomTemp = false;
+			for(vector<string>::size_type m = 0; m != actions.size(); m++){
+//				cout << "ANALYZE: " << actions[m] << endl;
+				if(analyzeInput(curRoom, inventory, actions[m])){
+					nextRoomTemp = true;
+				}
+			}
+//			nextRoom = nextRoomTemp;
+			return true;
+		}
+	}
+	return false;
+}
+
 bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 //	vector<Item*> inventory = *inventoryP;
 	bool nextRoom = false;
 	bool triggerMet = false;
+
 	// Check triggers in the current room
 	vector<Trigger*> triggers = curRoom->getTriggers();
 	for(vector<Trigger*>::size_type i = 0; i != triggers.size(); i++){
-		Trigger* t = triggers[i];
-		if(input == t->getCommand()){
-			bool conditionMet = false;
-			// Trigger is set off, check conditions
-			vector<condition*> conditions = t->getConditions();
-			for(vector<condition*>::size_type j = 0; j != conditions.size(); j++){
-				condition* c = conditions[j];
-
-				// Conditions can mean so many things... Case by case for now
-				if(c->owner == "inventory"){
-					conditionMet = !c->has;
-					if(inventory.size() > 0){
-						for(vector<Item*>::size_type k = 0; k != inventory.size(); k++){
-							if(inventory[k]->getName() == c->objectI->getName()){
-								conditionMet = !conditionMet;
-								break;
-							}
-						}
-					}
-				}else{ // status check on an object
-					if(c->objectC != NULL && c->objectC->getStatus() == c->status){
-						conditionMet = true;
-					}else if(c->objectI != NULL && c->objectI->getStatus() == c->status){
-						conditionMet = true;
-					}
-
-				}
-				break;
-			}
-			if(conditionMet){
-				cout << t->getPrint() << endl;
+		if(triggerCheck(curRoom, triggers[i], inventory, input)){
+			triggerMet = true;
+			break;
+		}
+	}
+	if(triggerMet){
+		return false; // Trigger is met, ask user for another input;
+	}
+	// Check triggers of creatures in the current room
+	vector<Creature*> creatures = curRoom->getCreatures();
+	for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+		vector<Trigger*> triggers = creatures[i]->getTriggers();
+		for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
+			if(triggerCheck(curRoom, triggers[j], inventory, input)){
 				triggerMet = true;
 				break;
 			}
 		}
 	}
-
 	if(triggerMet){
 		return false; // Trigger is met, ask user for another input;
 	}
-
 	if(input == "n" || input == "e" || input == "s" || input == "w"){
 		// User attempting to move
 		vector<border*> borders = curRoom->getBorders();
@@ -459,7 +498,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 			cout << "Game Over" << endl;
 			exit(0);
 		}else{
-			cout << "Error: " << input << endl;
+			cout << "Error" << endl;
 			return false;
 		}
 	}else{
@@ -491,7 +530,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					}
 				}
 				if(!found){
-					cout << "Error: " << input << endl;
+					cout << "Error" << endl;
 					return false;
 				}
 			}else if(command == "open"){
@@ -512,7 +551,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 						cout << "." << endl;
 					}
 				}else{
-					cout << "Error: " << input << endl;
+					cout << "Error" << endl;
 					return false;
 				}
 			}else if(command == "read"){
@@ -530,7 +569,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					}
 				}
 				if(!found){
-					cout << "Error: " << input << endl;
+					cout << "Error" << endl;
 					return false;
 				}
 			}else if(command == "drop"){
@@ -548,7 +587,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					}
 				}
 				if(!found){
-					cout << "Error: " << input << endl;
+					cout << "Error" << endl;
 					return false;
 				}
 			}else if(command == "put" && v.size() >= 4){
@@ -574,7 +613,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 							inventory.erase(inventory.begin() + place);
 							cout << "Item " << second << " added to " << v[3] << "." << endl;
 
-							// Trigger check
+							// Trigger check for container
 							vector<Trigger*> triggers = c->getTriggers();
 							for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
 								bool conditionMet = false;
@@ -590,19 +629,27 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 								}
 								if(conditionMet){
 									cout << triggers[j]->getPrint() << endl;
-									nextRoom = analyzeInput(curRoom, inventory, triggers[j]->getAction());
+
+									vector<string> actions = triggers[j]->getActions();
+									bool nextRoomTemp = false;
+									for(vector<string>::size_type m = 0; m != actions.size(); m++){
+										if(analyzeInput(curRoom, inventory, actions[m])){
+											nextRoomTemp = true;
+										}
+									}
+									nextRoom = nextRoomTemp;
 								}
 							}
 						}else{
-							cout << "Error: " << input << endl;
+							cout << "Error" << endl;
 							return false;
 						}
 					}else{
-						cout << "Error: " << input << endl;
+						cout << "Error" << endl;
 						return false;
 					}
 				}else{
-					cout << "Error: " << input << endl;
+					cout << "Error" << endl;
 					return false;
 				}
 			}else if(command == "turn" && second == "on" && v.size() >= 3){
@@ -618,7 +665,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					}
 				}
 				if(!found){
-					cout << "Error: " << input << endl;
+					cout << "Error" << endl;
 					return false;
 				}
 			}else if(command == "attack" && v.size() >= 4){
@@ -635,7 +682,13 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 								for(vector<Item*>::size_type k = 0; k != vulnerabilities.size(); k++){
 									if(v[3] == vulnerabilities[k]->getName()){
 										// Item used is a vulnerability
+
 										Attack* a = creatures[i]->getAttack();
+										if(a == NULL){
+											match = true;
+											cout << "You assault the " << second << " with the " << v[3] << "." << endl;
+											break;
+										}
 										// Analyze attack conditions
 										bool conditionMet = false;
 
@@ -669,7 +722,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					}
 				}
 				if(!match){
-					cout << "Error: " << input << endl;
+					cout << "Error" << endl;
 					return false;
 				}
 			// Commands not really used by users
@@ -679,7 +732,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				for(vector<Item*>::size_type i = 0; i != items.size(); i++){
 					if(items[i]->getName() == second){
 						items[i]->setStatus(v[3]);
-						cout << "DEBUG::UPDATED " << second << " TO " << v[3] << endl;
+//						cout << "DEBUG::UPDATED " << second << " TO " << v[3] << endl;
 						break;
 					}
 				}
@@ -687,7 +740,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
 					if(containers[i]->getName() == second){
 						containers[i]->setStatus(v[3]);
-						cout << "DEBUG::UPDATED " << second << " TO " << v[3] << endl;
+//						cout << "DEBUG::UPDATED " << second << " TO " << v[3] << endl;
 						break;
 					}
 				}
@@ -723,10 +776,10 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 						found = true;
 						if(creature != NULL){
 							rooms[i]->addCreature(creature);
-							cout << "DEBUG::ADDED " << second << " TO " << v[3] << endl;
+//							cout << "DEBUG::ADDED " << second << " TO " << v[3] << endl;
 						}else if(item != NULL){
 							rooms[i]->addItem(item);
-							cout << "DEBUG::ADDED " << second << " TO " << v[3] << endl;
+//							cout << "DEBUG::ADDED " << second << " TO " << v[3] << endl;
 						}
 						break;
 					}
@@ -737,7 +790,7 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 					for(vector<Container*>::size_type i = 0; i != containers.size(); i++){
 						if(containers[i]->getName() == v[3] && item != NULL){
 							containers[i]->addItem(item);
-							cout << "DEBUG::ADDED " << second << " TO " << v[3] << endl;
+//							cout << "DEBUG::ADDED " << second << " TO " << v[3] << endl;
 							break;
 						}
 					}
@@ -748,46 +801,46 @@ bool analyzeInput(Room* &curRoom, vector<Item*> &inventory, string input){
 				for(vector<Room*>::size_type i = 0; i != rooms.size(); i++){
 					if(rooms[i]->hasCreature(second)){
 						rooms[i]->removeCreature(second);
-						cout << "DEBUG::DELETED " << second << endl;
+//						cout << "DEBUG::DELETED " << second << endl;
 						break;
 					}
 				}
 			}else{
-				cout << "Error: " << input << endl;
+				cout << "Error" << endl;
 				return false;
 			}
-
-			// See if that triggers something for a creature
-			vector<Creature*> creatures = curRoom->getCreatures();
-			for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
-				vector<Trigger*> triggers = creatures[i]->getTriggers();
-				for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
-					if(triggers[j]->getStatus() != "disabled"){
-						bool conditionMet = false;
-						vector<condition*> conditions = triggers[j]->getConditions();
-						for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
-							condition* c = conditions[k];
-							if(c->objectI != NULL && c->objectI->getStatus() == c->status){
-								conditionMet = true;
-								break;
-							}
-						}
-						if(conditionMet){
-							cout << triggers[j]->getPrint() << endl;
-							if(triggers[j]->getType() == "single"){
-								triggers[j]->setStatus("disabled");
-							}
-						}
-					}
-				}
-			}
-
-
 		}else{
-			cout << "Error: " << input << endl;
+			cout << "Error" << endl;
 			return false;
 		}
 	}
+
+	// See if that triggers something for a creature
+	creatures = curRoom->getCreatures();
+	for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+		vector<Trigger*> triggers = creatures[i]->getTriggers();
+		for(vector<Trigger*>::size_type j = 0; j != triggers.size(); j++){
+			triggerCheck(curRoom, triggers[j], inventory, "NULL");
+//			if(triggers[j]->getStatus() != "disabled"){
+//				bool conditionMet = false;
+//				vector<condition*> conditions = triggers[j]->getConditions();
+//				for(vector<condition*>::size_type k = 0; k != conditions.size(); k++){
+//					condition* c = conditions[k];
+//					if(c->objectI != NULL && c->objectI->getStatus() == c->status){
+//						conditionMet = true;
+//						break;
+//					}
+//				}
+//				if(conditionMet){
+//					cout << triggers[j]->getPrint() << endl;
+//					if(triggers[j]->getType() != "permanent"){
+//						triggers[j]->setStatus("disabled");
+//					}
+//				}
+//			}
+		}
+	}
+
 	return nextRoom;
 }
 

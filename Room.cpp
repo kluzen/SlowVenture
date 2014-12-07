@@ -48,6 +48,30 @@ Item* Room::getItem(string s){
 	}
 	return NULL;
 }
+bool Room::hasCreature(string s){
+	for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+		if(creatures[i]->getName() == s){
+			return true;
+		}
+	}
+	return false;
+}
+void Room::removeCreature(string s){
+	for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+		if(creatures[i]->getName() == s){
+			creatures.erase(creatures.begin() + i);
+			return;
+		}
+	}
+}
+Creature* Room::getCreature(string s){
+	for(vector<Creature*>::size_type i = 0; i != creatures.size(); i++){
+		if(creatures[i]->getName() == s){
+			return creatures[i];
+		}
+	}
+	return NULL;
+}
 bool Room::hasContainer(string s){
 	for(vector<Item*>::size_type i = 0; i != containers.size(); i++){
 		if(containers[i]->getName() == s){

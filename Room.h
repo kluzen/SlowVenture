@@ -42,6 +42,9 @@ public:
 	void removeItem(string);
 	bool hasItem(string);
 	Item* getItem(string);
+	void removeCreature(string);
+	bool hasCreature(string);
+	Creature* getCreature(string);
 	bool hasContainer(string);
 	Container* getContainer(string);
 //	bool hasCreature(Creature*);
